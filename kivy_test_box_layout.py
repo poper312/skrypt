@@ -11,6 +11,8 @@ from kivy.uix.scrollview import ScrollView
 from kivy.clock import Clock
 from fpdf import FPDF
 from datetime import datetime
+from kivy.graphics import Color, Rectangle
+
 # from functool import partial
 
 
@@ -18,49 +20,56 @@ class MyLayout(BoxLayout):
     def __init__(self, **kwargs):
         super(MyLayout, self).__init__(**kwargs)
 
-        self.orientation = "vertical"
+        self.orientation = "horizontal"
         self.spacing = 20
         # self.padding = 50
         self.current_clicked_fun = None
 
-        self.add_widget(Label(text='Enter IP address', size_hint=(1, 0.2)))
-        self.ip_addr = TextInput(multiline=False, size_hint=(1, 0.2))
-        self.add_widget(self.ip_addr)
+        # horizontal_box = BoxLayout(orientation='horizontal')
+        vertical_box = BoxLayout(orientation='vertical', spacing=20)
 
-        self.submit = Button(text='Run port scan', font_size=32, size_hint=(0.8, 0.3), pos_hint={'center_x': 0.5})
+        vertical_box.add_widget(Label(text='Enter IP address', size_hint=(1, 0.2)))
+        self.ip_addr = TextInput(multiline=False, size_hint=(1, 0.2))
+        vertical_box.add_widget(self.ip_addr)
+
+        self.submit = Button(text='Run port scan', font_size=32, size_hint=(1, 0.3))
         buttoncallback = lambda *args:self.change_label(fun=self.run_port_scan, *args)
         self.submit.bind(on_press=buttoncallback)
-        self.add_widget(self.submit)
+        vertical_box.add_widget(self.submit)
 
-        self.submit = Button(text='Run os scan', font_size=32, size_hint=(0.8, 0.3), pos_hint={'center_x': 0.5})
+        self.submit = Button(text='Run os scan', font_size=32, size_hint=(1, 0.3))
         buttoncallback = lambda *args:self.change_label(fun=self.run_os_scan, *args)
         self.submit.bind(on_press=buttoncallback)
-        self.add_widget(self.submit)
+        vertical_box.add_widget(self.submit)
 
-        self.submit = Button(text='Run ICMP ping', font_size=32, size_hint=(0.8, 0.3), pos_hint={'center_x': 0.5})
+        self.submit = Button(text='Run ICMP ping', font_size=32, size_hint=(1, 0.3))
         buttoncallback = lambda *args:self.change_label(fun=self.run_icmp_ping, *args)
         self.submit.bind(on_press=buttoncallback)
-        self.add_widget(self.submit)
+        vertical_box.add_widget(self.submit)
 
-        self.submit = Button(text='Run traceroute', font_size=32, size_hint=(0.8, 0.3), pos_hint={'center_x': 0.5})
+        self.submit = Button(text='Run traceroute', font_size=32, size_hint=(1, 0.3))
         buttoncallback = lambda *args:self.change_label(fun=self.run_traceroute, *args)
         self.submit.bind(on_press=buttoncallback)
-        self.add_widget(self.submit)
+        vertical_box.add_widget(self.submit)
 
-        self.submit = Button(text='Create PDF report', font_size=32, size_hint=(0.8, 0.3), pos_hint={'center_x': 0.5})
+        self.submit = Button(text='Create PDF report', font_size=32, size_hint=(1, 0.3))
         buttoncallback = lambda *args:self.change_label(fun=self.create_pdf_report, *args)
         self.submit.bind(on_press=buttoncallback)
-        self.add_widget(self.submit)
+        vertical_box.add_widget(self.submit)
+
+        self.add_widget(vertical_box)
 
         # self.scroll_view = ScrollView(scroll_type=['bars', 'content'], bar_width=10)
         self.scroll_view = ScrollView(scroll_type=['bars', 'content'], bar_width=10)
         self.output = Label(text='Output', size_hint=(1, None), halign='center')
         self.scroll_view.add_widget(self.output)
         self.add_widget(self.scroll_view)
+        
+        # self.add_widget(horizontal_box)
 
     def adjust_scroll(self, results, instance):
         self.output.text = results
-        self.output.size_hint=(1, self.output.text.count('\n')/8)
+        self.output.size_hint=(1, self.output.text.count('\n')/11)
 
     def run_port_scan(self, instance):
         print('Button has been pressed')
@@ -116,6 +125,13 @@ class MyLayout(BoxLayout):
 
         pdf.set_font('Arial', 'B', 18)
         pdf.cell(0, 10, 'Hosts responding to ICMP Ping', 0, 1, 'C')
+        pdf.set_font('Arial', '', 12)
+        pdf.multi_cell(0, 10, results, 0, 'J')
+
+        results = tracert(self.ip_addr.text)
+
+        pdf.set_font('Arial', 'B', 18)
+        pdf.cell(0, 10, 'Traceroute for discovered Hosts', 0, 1, 'C')
         pdf.set_font('Arial', '', 12)
         pdf.multi_cell(0, 10, results, 0, 'J')
 

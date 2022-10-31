@@ -65,9 +65,9 @@ def port_scan(destination):
 
 def icmp_ping(destination):
     hosts = []
-    print(conf.L3socket)
+    # print(conf.L3socket)
     conf.L3socket = L3RawSocket # umozliwia przeskanowanie sieci w kotrej jest urzadzenie wysylajace pakiety
-    print(conf.L3socket)
+    # print(conf.L3socket)
     ans, unans = sr(IP(dst=destination)/ICMP(), timeout=3)
     # return ans
     # return ans.summary()
@@ -87,6 +87,7 @@ def icmp_ping(destination):
     return results
 
 def tracert(destination):
+    conf.L3socket = L3RawSocket # umozliwia przeskanowanie sieci w kotrej jest urzadzenie wysylajace pakiety
     capture = StringIO()
     save_stdout = sys.stdout
     sys.stdout = capture
