@@ -29,6 +29,7 @@ def os_scan(destination):
 def port_scan(destination):
     nm = nmap.PortScanner()
     nm.scan(destination, '1-65535') # przedzial od 1 do 65535 aby wykryc wszystkie porty
+    # nm.scan(destination)
     hosts = []
     for host in nm.all_hosts(): 
         for protocol in nm[host].all_protocols():
@@ -69,17 +70,12 @@ def icmp_ping(destination):
     conf.L3socket = L3RawSocket # umozliwia przeskanowanie sieci w kotrej jest urzadzenie wysylajace pakiety
     # print(conf.L3socket)
     ans, unans = sr(IP(dst=destination)/ICMP(), timeout=3)
-    # return ans
-    # return ans.summary()
-    # return ans.summary(lambda s,r: r.sprintf("%IP.src% is alive"))
     capture = StringIO()
     save_stdout = sys.stdout
     sys.stdout = capture
     ans.summary(lambda s,r: r.sprintf("%IP.src% is alive"))
-    # if not unans:
-    #     ans.summary(lambda s,r: r.sprintf("%IP.src% is alive"))
-    # else:
-    #     unans.summary(lambda s,r: r.sprintf("%IP.src% is down"))
+    # ans_ips = [a[1].src for a in ans]
+    # print(ans_ips)
     sys.stdout = save_stdout
 
     results = capture.getvalue()
@@ -87,11 +83,16 @@ def icmp_ping(destination):
     return results
 
 def tracert(destination):
-    conf.L3socket = L3RawSocket # umozliwia przeskanowanie sieci w kotrej jest urzadzenie wysylajace pakiety
+    nm = nmap.PortScanner()
+    nm.scan(destination)
     capture = StringIO()
     save_stdout = sys.stdout
     sys.stdout = capture
-    traceroute(destination, maxttl=10)
+    # print(type(sys.stdout))
+    for host in nm.all_hosts():
+        print(host)
+        traceroute(host, maxttl=10)
+        print('\n')
     sys.stdout = save_stdout
 
     results = capture.getvalue()
@@ -116,9 +117,9 @@ def show_results(scan):
 # for host in port_scan("192.168.2.0/24"):
 #     print(host)
 
-# tracert('192.168.2.1')
+# tracert('192.168.2.0/24')
 
-# icmp_ping("192.168.8.0/24")
+# icmp_ping("192.168.2.0/24")
 # print(show_results(port_scan('192.168.1.254')))
 
 # print(conf.L3socket)

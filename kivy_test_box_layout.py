@@ -12,6 +12,8 @@ from kivy.clock import Clock
 from fpdf import FPDF
 from datetime import datetime
 from kivy.graphics import Color, Rectangle
+from kivy.uix.popup import Popup
+import ipaddress
 
 # from functool import partial
 
@@ -24,6 +26,8 @@ class MyLayout(BoxLayout):
         self.spacing = 20
         # self.padding = 50
         self.current_clicked_fun = None
+
+        self.popup_validate_ip = Popup(title='Validation of IP address', content=Label(text='Wrong IP address'), size_hint=(0.5, 0.5))
 
         # horizontal_box = BoxLayout(orientation='horizontal')
         vertical_box = BoxLayout(orientation='vertical', spacing=20)
@@ -67,12 +71,31 @@ class MyLayout(BoxLayout):
         
         # self.add_widget(horizontal_box)
 
+    def vaildate_ip_address(self):
+        try:
+            ip_addr = self.ip_addr.text.split('/')
+            ip_addr_without_mask = ip_addr[0]
+            # print(len(ip_addr) == 2)
+            # print(int(ip_addr[1]) > 8)
+            # print(int(ip_addr[1]) < 32)
+            if len(ip_addr) == 2 and not (int(ip_addr[1]) >= 8 and int(ip_addr[1]) <= 32):
+                raise ValueError
+            ip = ipaddress.ip_address(ip_addr_without_mask)
+            print("IP address {} is valid. The object returned is {}".format(ip_addr_without_mask, ip))
+            return True
+        except ValueError:
+            print("IP address {} is not valid".format(ip_addr_without_mask))
+            self.popup_validate_ip.open()
+            return False
+
     def adjust_scroll(self, results, instance):
         self.output.text = results
         self.output.size_hint=(1, self.output.text.count('\n')/11)
 
     def run_port_scan(self, instance):
         print('Button has been pressed')
+        
+        # if self.vaildate_ip_address() == True:
         port_scan_results = port_scan(self.ip_addr.text)
         results = show_results(port_scan_results)
         self.adjust_scroll(results, instance)
@@ -97,15 +120,17 @@ class MyLayout(BoxLayout):
         results = tracert(self.ip_addr.text)
         # self.add_widget(Label(text ="{}".format(results)))
         self.output.text = results
+        print(results)
         self.adjust_scroll(results, instance)
 
     def change_label(self, instance,  fun):
-        self.scroll_view.remove_widget(self.output)
-        self.output = Label(text='Loading ...', size_hint=(1, 1))
-        self.scroll_view.add_widget(self.output)
-        # self.output.text=(1, 1)
-        # self.output.text = 'Loading ...'
-        threading.Thread(target=self.updating_gui(fun)).start()
+        if self.vaildate_ip_address() == True:
+            self.scroll_view.remove_widget(self.output)
+            self.output = Label(text='Loading ...', size_hint=(1, 1))
+            self.scroll_view.add_widget(self.output)
+            # self.output.text=(1, 1)
+            # self.output.text = 'Loading ...'
+            threading.Thread(target=self.updating_gui(fun)).start()
 
     def updating_gui(self, fun):
         print('Starting GUI update')
