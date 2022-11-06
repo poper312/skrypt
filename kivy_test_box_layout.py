@@ -36,6 +36,10 @@ class MyLayout(BoxLayout):
         self.ip_addr = TextInput(multiline=False, size_hint=(1, 0.2))
         vertical_box.add_widget(self.ip_addr)
 
+        vertical_box.add_widget(Label(text='Enter port range for port scan, eg. "100-200"', size_hint=(1, 0.2)))
+        self.port_range = TextInput(multiline=False, size_hint=(1, 0.2))
+        vertical_box.add_widget(self.port_range)
+
         self.submit = Button(text='Run port scan', font_size=32, size_hint=(1, 0.3))
         buttoncallback = lambda *args:self.change_label(fun=self.run_port_scan, *args)
         self.submit.bind(on_press=buttoncallback)
@@ -61,6 +65,11 @@ class MyLayout(BoxLayout):
         self.submit.bind(on_press=buttoncallback)
         vertical_box.add_widget(self.submit)
 
+        self.submit = Button(text='Cancel running function', font_size=32, size_hint=(1, 0.3))
+        buttoncallback = lambda *args:self.change_label(fun=self.stop_running_fun, *args)
+        self.submit.bind(on_press=buttoncallback)
+        vertical_box.add_widget(self.submit)
+
         self.add_widget(vertical_box)
 
         # self.scroll_view = ScrollView(scroll_type=['bars', 'content'], bar_width=10)
@@ -70,6 +79,11 @@ class MyLayout(BoxLayout):
         self.add_widget(self.scroll_view)
         
         # self.add_widget(horizontal_box)
+
+    def stop_running_fun(self):
+        self.stop = threading.Event()
+        self.stop.set()
+        self.output.text = 'Function canceled'
 
     def vaildate_ip_address(self):
         try:
@@ -88,40 +102,39 @@ class MyLayout(BoxLayout):
             self.popup_validate_ip.open()
             return False
 
-    def adjust_scroll(self, results, instance):
+    def adjust_scroll(self, results):
         self.output.text = results
         self.output.size_hint=(1, self.output.text.count('\n')/11)
 
-    def run_port_scan(self, instance):
+    def run_port_scan(self):
         print('Button has been pressed')
-        
         # if self.vaildate_ip_address() == True:
-        port_scan_results = port_scan(self.ip_addr.text)
+        port_scan_results = port_scan(self.ip_addr.text, self.port_range.text)
         results = show_results(port_scan_results)
-        self.adjust_scroll(results, instance)
+        self.adjust_scroll(results)
 
-    def run_os_scan(self, instance):
+    def run_os_scan(self):
         print('Button has been pressed')
         os_scan_results = os_scan(self.ip_addr.text)
         results = show_results(os_scan_results)
         # self.add_widget(Label(text ="{}".format(results)))
         self.output.text = results
-        self.adjust_scroll(results, instance)
+        self.adjust_scroll(results)
 
-    def run_icmp_ping(self, instance):
+    def run_icmp_ping(self):
         print('Button has been pressed')
         results = icmp_ping(self.ip_addr.text)
         # self.add_widget(Label(text ="{}".format(results)))
         self.output.text = results
-        self.adjust_scroll(results, instance)
+        self.adjust_scroll(results)
 
-    def run_traceroute(self, instance):
+    def run_traceroute(self):
         print('Button has been pressed')
         results = tracert(self.ip_addr.text)
         # self.add_widget(Label(text ="{}".format(results)))
         self.output.text = results
         print(results)
-        self.adjust_scroll(results, instance)
+        self.adjust_scroll(results)
 
     def change_label(self, instance,  fun):
         if self.vaildate_ip_address() == True:
@@ -134,53 +147,75 @@ class MyLayout(BoxLayout):
 
     def updating_gui(self, fun):
         print('Starting GUI update')
-        time.sleep(2)
+        # time.sleep(2)
         print('Finished GUI update')
         # Clock.schedule_once(self.create_pdf_report)
-        Clock.schedule_once(fun)
+        # self.event = Clock.schedule_once(fun)
+        self.thread = threading.Thread(target=fun)
+        self.thread.start()
 
-    def create_pdf_report(self, instance):
+    def create_pdf_report(self):
         #self.change_label('Loading ...', instance)
         print('Button has been pressed')
 
         pdf = FPDF()
         pdf.add_page()
-        
-        results = icmp_ping(self.ip_addr.text)
 
+        start_time = datetime.now()
+        
+        start_time_formatted = start_time.strftime("%d-%m-%Y %H:%M:%S")
+
+        results_icmp_ping = icmp_ping(self.ip_addr.text)
+
+        results_traceroute = tracert(self.ip_addr.text)
+
+        port_scan_results = port_scan(self.ip_addr.text, self.port_range.text)
+        results_port_scan = show_results(port_scan_results)
+        print(results_port_scan)
+
+        os_scan_results = os_scan(self.ip_addr.text)
+        results_os_scan = show_results(os_scan_results)
+        print(results_os_scan)
+
+        end_time = datetime.now()
+
+        end_time_formatted = end_time.strftime("%d-%m-%Y %H:%M:%S")
+
+        pdf.set_font('Arial', 'B', 18)
+        pdf.cell(0, 10, 'Scan informations', 0, 1, 'C')
+        pdf.set_font('Arial', '', 12)
+        pdf.multi_cell(0, 10, 'Start time: {}'.format(start_time_formatted), 0, 'J')
+        pdf.multi_cell(0, 10, 'End time: {}'.format(end_time_formatted), 0, 'J')
+        pdf.multi_cell(0, 10, 'IP: {}'.format(self.ip_addr.text), 0, 'J')
+        if self.port_range.text:
+            pdf.multi_cell(0, 10, 'Port range: {}'.format(self.port_range.text), 0, 'J')
+        else:
+            pdf.multi_cell(0, 10, 'Port range: Default', 0, 'J')
+        
         pdf.set_font('Arial', 'B', 18)
         pdf.cell(0, 10, 'Hosts responding to ICMP Ping', 0, 1, 'C')
         pdf.set_font('Arial', '', 12)
-        pdf.multi_cell(0, 10, results, 0, 'J')
-
-        results = tracert(self.ip_addr.text)
+        pdf.multi_cell(0, 10, results_icmp_ping, 0, 'J')
 
         pdf.set_font('Arial', 'B', 18)
         pdf.cell(0, 10, 'Traceroute for discovered Hosts', 0, 1, 'C')
         pdf.set_font('Arial', '', 12)
-        pdf.multi_cell(0, 10, results, 0, 'J')
-
-        port_scan_results = port_scan(self.ip_addr.text)
-        results = show_results(port_scan_results)
-        print(results)
+        pdf.multi_cell(0, 10, results_traceroute, 0, 'J')
         
         pdf.set_font('Arial', 'B', 18)
         pdf.cell(0, 10, 'Port Scan', 0, 1, 'C')
         pdf.set_font('Arial', '', 12)
-        pdf.multi_cell(0, 10, results, 0, 'J')
+        pdf.multi_cell(0, 10, results_port_scan, 0, 'J')
 
-        os_scan_results = os_scan(self.ip_addr.text)
-        results = show_results(os_scan_results)
-        print(results)
-
+        
         pdf.set_font('Arial', 'B', 18)
         pdf.cell(0, 10, 'Operating System Scan', 0, 1, 'C')
         pdf.set_font('Arial', '', 12)
-        pdf.multi_cell(0, 10, results, 0, 'J')
+        pdf.multi_cell(0, 10, results_os_scan, 0, 'J')
 
-        now = datetime.now()
-        now_formated = now.strftime("%d-%m-%Y-%H%M%S")
-        pdf.output('report-{}.pdf'.format(now_formated), 'F')
+        pdf_generate_time = datetime.now()
+        pdf_generate_time_formatted = pdf_generate_time.strftime("%d-%m-%Y %H:%M:%S")
+        pdf.output('report-{}.pdf'.format(pdf_generate_time_formatted), 'F')
 
         self.output.text = 'Done'
 
@@ -188,6 +223,7 @@ class PortScan(App):
    
     # This returns the content we want in the window
     def build(self):
+        self.title = "Simple pentester"
         return MyLayout()
         
    

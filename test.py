@@ -26,9 +26,13 @@ def os_scan(destination):
     
     return hosts
 
-def port_scan(destination):
+def port_scan(destination, port_range):
     nm = nmap.PortScanner()
-    nm.scan(destination, '1-65535') # przedzial od 1 do 65535 aby wykryc wszystkie porty
+    # nm.scan(destination, port_range)
+    if port_range:
+        nm.scan(destination, port_range) # przedzial od 1 do 65535 aby wykryc wszystkie porty
+    else:
+        nm.scan(destination)
     # nm.scan(destination)
     hosts = []
     for host in nm.all_hosts(): 
