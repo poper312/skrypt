@@ -28,6 +28,7 @@ class MyLayout(BoxLayout):
         self.current_clicked_fun = None
 
         self.popup_validate_ip = Popup(title='Validation of IP address', content=Label(text='Wrong IP address'), size_hint=(0.5, 0.5))
+        self.popup_validate_port_range = Popup(title='Validation of Port range', content=Label(text='Wrong port range'), size_hint=(0.5, 0.5))
 
         # horizontal_box = BoxLayout(orientation='horizontal')
         vertical_box = BoxLayout(orientation='vertical', spacing=20)
@@ -78,7 +79,7 @@ class MyLayout(BoxLayout):
         self.stop.set()
         self.output.text = 'Function canceled'
 
-    def vaildate_ip_address(self):
+    def validate_ip_address(self):
         try:
             ip_addr = self.ip_addr.text.split('/')
             ip_addr_without_mask = ip_addr[0]
@@ -90,6 +91,18 @@ class MyLayout(BoxLayout):
         except ValueError:
             print("IP address {} is not valid".format(ip_addr_without_mask))
             self.popup_validate_ip.open()
+            return False
+
+    def validate_port_range(self):
+        try:
+            port_r = self.port_range.text.split('-')
+            if int(port_r[0]) >= int(port_r[1]):
+                raise ValueError
+            return True
+            
+        except ValueError:
+            print("Port range {} is not valid".format(port_r))
+            self.popup_validate_port_range.open()
             return False
 
     def adjust_scroll(self, results):
@@ -123,7 +136,7 @@ class MyLayout(BoxLayout):
         self.adjust_scroll(results)
 
     def change_label(self, instance,  fun):
-        if self.vaildate_ip_address() == True:
+        if self.validate_ip_address() == True and self.validate_port_range() == True:
             self.scroll_view.remove_widget(self.output)
             self.output = Label(text='Loading ...', size_hint=(1, 1))
             self.scroll_view.add_widget(self.output)
