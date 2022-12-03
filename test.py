@@ -5,6 +5,7 @@ import sys
 from io import StringIO
 
 def os_scan(destination):
+    print("hejo")
     nm = nmap.PortScanner()
     os_detection = nm.scan(destination, arguments="-O")
     # print(os_detection)
