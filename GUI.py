@@ -1,6 +1,6 @@
 from threading import main_thread
 import kivy
-from test import *
+from functions import *
 kivy.require('1.10.0')
 from kivy.app import App
 from kivy.uix.label import Label
@@ -65,20 +65,13 @@ class MyLayout(BoxLayout):
         self.submit.bind(on_press=buttoncallback)
         vertical_box.add_widget(self.submit)
 
-        self.submit = Button(text='Cancel running function', font_size=32, size_hint=(1, 0.3))
-        buttoncallback = lambda *args:self.change_label(fun=self.stop_running_fun, *args)
-        self.submit.bind(on_press=buttoncallback)
-        vertical_box.add_widget(self.submit)
-
         self.add_widget(vertical_box)
 
-        # self.scroll_view = ScrollView(scroll_type=['bars', 'content'], bar_width=10)
         self.scroll_view = ScrollView(scroll_type=['bars', 'content'], bar_width=10)
         self.output = Label(text='Output', size_hint=(1, None), halign='center')
         self.scroll_view.add_widget(self.output)
         self.add_widget(self.scroll_view)
         
-        # self.add_widget(horizontal_box)
 
     def stop_running_fun(self):
         self.stop = threading.Event()
@@ -89,9 +82,6 @@ class MyLayout(BoxLayout):
         try:
             ip_addr = self.ip_addr.text.split('/')
             ip_addr_without_mask = ip_addr[0]
-            # print(len(ip_addr) == 2)
-            # print(int(ip_addr[1]) > 8)
-            # print(int(ip_addr[1]) < 32)
             if len(ip_addr) == 2 and not (int(ip_addr[1]) >= 8 and int(ip_addr[1]) <= 32):
                 raise ValueError
             ip = ipaddress.ip_address(ip_addr_without_mask)
@@ -108,7 +98,6 @@ class MyLayout(BoxLayout):
 
     def run_port_scan(self):
         print('Button has been pressed')
-        # if self.vaildate_ip_address() == True:
         port_scan_results = port_scan(self.ip_addr.text, self.port_range.text)
         results = show_results(port_scan_results)
         self.adjust_scroll(results)
@@ -117,21 +106,18 @@ class MyLayout(BoxLayout):
         print('Button has been pressed')
         os_scan_results = os_scan(self.ip_addr.text)
         results = show_results(os_scan_results)
-        # self.add_widget(Label(text ="{}".format(results)))
         self.output.text = results
         self.adjust_scroll(results)
 
     def run_icmp_ping(self):
         print('Button has been pressed')
         results = icmp_ping(self.ip_addr.text)
-        # self.add_widget(Label(text ="{}".format(results)))
         self.output.text = results
         self.adjust_scroll(results)
 
     def run_traceroute(self):
         print('Button has been pressed')
         results = tracert(self.ip_addr.text)
-        # self.add_widget(Label(text ="{}".format(results)))
         self.output.text = results
         print(results)
         self.adjust_scroll(results)
@@ -141,21 +127,15 @@ class MyLayout(BoxLayout):
             self.scroll_view.remove_widget(self.output)
             self.output = Label(text='Loading ...', size_hint=(1, 1))
             self.scroll_view.add_widget(self.output)
-            # self.output.text=(1, 1)
-            # self.output.text = 'Loading ...'
             threading.Thread(target=self.updating_gui(fun)).start()
 
     def updating_gui(self, fun):
         print('Starting GUI update')
-        # time.sleep(2)
         print('Finished GUI update')
-        # Clock.schedule_once(self.create_pdf_report)
-        # self.event = Clock.schedule_once(fun)
         self.thread = threading.Thread(target=fun)
         self.thread.start()
 
     def create_pdf_report(self):
-        #self.change_label('Loading ...', instance)
         print('Button has been pressed')
 
         pdf = FPDF()
@@ -182,7 +162,7 @@ class MyLayout(BoxLayout):
         end_time_formatted = end_time.strftime("%d-%m-%Y %H:%M:%S")
 
         pdf.set_font('Arial', 'B', 18)
-        pdf.cell(0, 10, 'Scan informations', 0, 1, 'C')
+        pdf.cell(0, 10, 'Scan information', 0, 1, 'C')
         pdf.set_font('Arial', '', 12)
         pdf.multi_cell(0, 10, 'Start time: {}'.format(start_time_formatted), 0, 'J')
         pdf.multi_cell(0, 10, 'End time: {}'.format(end_time_formatted), 0, 'J')
@@ -217,13 +197,12 @@ class MyLayout(BoxLayout):
         pdf_generate_time_formatted = pdf_generate_time.strftime("%d-%m-%Y %H:%M:%S")
         pdf.output('report-{}.pdf'.format(pdf_generate_time_formatted), 'F')
 
-        self.output.text = 'Done'
+        self.output.text = 'PDF report created'
 
 class PortScan(App):
    
-    # This returns the content we want in the window
     def build(self):
-        self.title = "Simple pentester"
+        self.title = "Simple auditor"
         return MyLayout()
         
    
