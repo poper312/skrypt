@@ -12,11 +12,6 @@ class Host_port_scan:
         self.address = address 
         self.state = state
         self.open_port = open_port
-    # def __str__(self):
-    #         return "-----------\nHost: {}\nState of host: {}\nPort: {}\nState of port: {}\nService: {}\nProduct: {}\nVersion: {}\nExtra info: {}".format(
-    #                                 self.address, self.state, self.open_port.port, 
-    #                                 self.open_port.state, self.open_port.service, self.open_port.product, 
-    #                                 self.open_port.version, self.open_port.extra_info)
     def __str__(self):
         return """---------------------------------------------------------------------------------
         Host: {} 
