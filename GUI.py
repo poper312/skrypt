@@ -95,8 +95,10 @@ class MyLayout(BoxLayout):
 
     def validate_port_range(self):
         try:
+            if self.port_range.text == '':
+                return True
             port_r = self.port_range.text.split('-')
-            if int(port_r[0]) >= int(port_r[1]):
+            if int(port_r[0]) > int(port_r[1]):
                 raise ValueError
             return True
             
@@ -149,8 +151,6 @@ class MyLayout(BoxLayout):
         self.thread.start()
 
     def create_pdf_report(self):
-        print('Button has been pressed')
-
         pdf = FPDF()
         pdf.add_page()
 
@@ -209,7 +209,6 @@ class MyLayout(BoxLayout):
         pdf_generate_time = datetime.now()
         pdf_generate_time_formatted = pdf_generate_time.strftime("%d-%m-%Y %H:%M:%S")
         pdf.output('report-{}.pdf'.format(pdf_generate_time_formatted), 'F')
-
         self.output.text = 'PDF report created'
 
 class PortScan(App):
